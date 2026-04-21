@@ -24,16 +24,18 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const pathname = request.nextUrl.pathname
 
-  const isAuthPage =
+  const isLoginPage =
     pathname.startsWith('/login') ||
-    pathname.startsWith('/signup') ||
-    pathname.startsWith('/set-password')
+    pathname.startsWith('/signup')
+  const isPublicPage = isLoginPage || pathname.startsWith('/set-password')
 
-  if (!user && !isAuthPage) {
+  if (!user && !isPublicPage) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (user && isAuthPage) {
+  // 已登入者訪問 login/signup 才踢回首頁；/set-password 要讓有 session
+  // 的邀請用戶能設密碼，不能踢
+  if (user && isLoginPage) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
@@ -56,5 +58,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|auth/).*)'],
 }

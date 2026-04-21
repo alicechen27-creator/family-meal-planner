@@ -13,22 +13,36 @@ export default function SetPasswordPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // 從 URL hash 取得 access_token 並建立 session
-    const hash = window.location.hash
-    if (!hash) return
+    const supabase = createClient()
+    async function init() {
+      // 新 flow: session 已由 /auth/confirm 建好
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setReady(true)
+        return
+      }
 
-    const params = new URLSearchParams(hash.substring(1))
-    const accessToken = params.get('access_token')
-    const refreshToken = params.get('refresh_token')
+      // 舊 flow fallback: URL hash 帶 access_token（for 尚未過期的舊邀請）
+      const hash = window.location.hash
+      if (hash) {
+        const params = new URLSearchParams(hash.substring(1))
+        const accessToken = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          if (!error) {
+            setReady(true)
+            return
+          }
+        }
+      }
 
-    if (accessToken && refreshToken) {
-      const supabase = createClient()
-      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-        .then(() => setReady(true))
-        .catch(() => setError('連結已過期，請重新索取邀請信'))
-    } else {
-      setError('無效的邀請連結')
+      setError('無效或已過期的連結，請聯絡管理員重新寄送邀請')
     }
+    init()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {

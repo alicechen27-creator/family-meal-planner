@@ -12,7 +12,21 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // 偵測 URL hash 中的 token（invite / magic link）
+    // 新 flow: /auth/confirm 失敗時會把 error 放在 query string
+    const errParam = new URLSearchParams(window.location.search).get('error')
+    if (errParam) {
+      const decoded = decodeURIComponent(errParam).toLowerCase()
+      if (errParam === 'invalid_link') {
+        setError('邀請連結無效，請聯絡管理員重新寄送')
+      } else if (decoded.includes('expired') || decoded.includes('otp')) {
+        setError('邀請連結已過期，請聯絡管理員重新寄送')
+      } else {
+        setError('驗證失敗：' + decodeURIComponent(errParam))
+      }
+      return
+    }
+
+    // 舊 flow fallback: URL hash 中的 token（implicit invite / magic link）
     const hash = window.location.hash
     if (!hash) return
     const params = new URLSearchParams(hash.substring(1))
@@ -27,7 +41,6 @@ export default function LoginPage() {
       return
     }
 
-    // 有 access_token 且是 invite → 導到設定密碼頁
     const accessToken = params.get('access_token')
     const type = params.get('type')
     if (accessToken && type === 'invite') {
