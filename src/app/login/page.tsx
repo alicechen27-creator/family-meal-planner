@@ -43,7 +43,13 @@ export default function LoginPage() {
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      setError('帳號或密碼錯誤，請再試一次')
+      if (error.message.includes('Email not confirmed')) {
+        setError('信箱尚未完成驗證，請點擊邀請信內的連結啟用帳號後再登入')
+      } else if (error.message.includes('Invalid login credentials')) {
+        setError('帳號或密碼錯誤，請再試一次')
+      } else {
+        setError('登入失敗：' + error.message)
+      }
       setLoading(false)
     } else {
       router.push('/')

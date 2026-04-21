@@ -10,6 +10,7 @@ export default function SignupPage() {
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const router = useRouter()
 
   async function handleSignup(e: React.FormEvent) {
@@ -25,11 +26,15 @@ export default function SignupPage() {
 
     setLoading(true)
     setError('')
+    setInfo('')
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) {
       setError('註冊失敗：' + error.message)
+      setLoading(false)
+    } else if (!data.session) {
+      setInfo(`驗證信已寄到 ${email}，請點擊信中連結啟用帳號後再回來登入。`)
       setLoading(false)
     } else {
       router.push('/')
@@ -83,6 +88,9 @@ export default function SignupPage() {
 
           {error && (
             <p className="text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+          )}
+          {info && (
+            <p className="text-green-700 text-sm bg-green-50 px-3 py-2 rounded-lg">{info}</p>
           )}
 
           <button
