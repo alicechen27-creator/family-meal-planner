@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@media print {
+  /* Hide navigation */
+  nav, header { display: none !important; }
+
+  /* Reset layout for print */
+  body { background: white !important; }
+  main { margin: 0 !important; padding: 0 !important; max-width: 100% !important; }
+
+  /* Remove bottom padding (reserved for tab bars) */
+  .pb-24 { padding-bottom: 0 !important; }
+
+  /* Clean up card visuals */
+  .rounded-2xl, .rounded-xl { border-radius: 4px !important; }
+  .shadow-sm { box-shadow: none !important; }
+
+  /* Hide interactive controls */
+  button, input[type="checkbox"] { display: none !important; }
+
+  /* Show checked items without strikethrough in print */
+  .line-through { text-decoration: none !important; color: inherit !important; }
+
+  /* Page breaks between channel groups */
+  .bg-white.rounded-2xl { break-inside: avoid; }
+}
