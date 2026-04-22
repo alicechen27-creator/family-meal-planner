@@ -181,8 +181,11 @@ create table if not exists week_plans (
   week_start date not null unique,
   status text not null default 'open' check (status in ('open', 'closed')),
   created_by uuid references profiles(id),
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  notified_full_at timestamptz
 );
+
+alter table week_plans add column if not exists notified_full_at timestamptz;
 
 alter table week_plans enable row level security;
 

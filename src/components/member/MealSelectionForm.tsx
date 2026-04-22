@@ -133,6 +133,13 @@ export default function MealSelectionForm({ slot, components, allInOneRecipes, u
       return
     }
 
+    // Fire-and-forget: server verifies week-full + idempotency.
+    fetch('/api/push/notify-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekPlanId: slot.week_plan_id }),
+    }).catch(() => {})
+
     router.push('/')
   }
 

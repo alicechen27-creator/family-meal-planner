@@ -31,6 +31,8 @@ export default function MemberNav({ profile, isAdmin }: Props) {
     return exact ? pathname === href : pathname.startsWith(href)
   }
 
+  const hideBottomTabs = pathname.startsWith('/select/')
+
   return (
     <>
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm print:hidden">
@@ -62,22 +64,24 @@ export default function MemberNav({ profile, isAdmin }: Props) {
         </div>
       </header>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 print:hidden">
-        <div className="flex max-w-lg mx-auto">
-          {TAB_ITEMS.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-xs transition-colors ${
-                isActive(item.href, item.exact) ? 'text-orange-600' : 'text-gray-400'
-              }`}
-            >
-              <span className="text-lg">{item.emoji}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
+      {!hideBottomTabs && (
+        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 print:hidden">
+          <div className="flex max-w-lg mx-auto">
+            {TAB_ITEMS.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-xs transition-colors ${
+                  isActive(item.href, item.exact) ? 'text-orange-600' : 'text-gray-400'
+                }`}
+              >
+                <span className="text-lg">{item.emoji}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
     </>
   )
 }
