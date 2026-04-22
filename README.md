@@ -253,7 +253,7 @@ node --env-file=.env.local --experimental-strip-types scripts/batch-import-recip
 
 ## #07 踩過的坑
 
-兩週開發，踩到夠寫一本書。挑五個印象最深的：
+兩週開發，踩到夠寫一本書。挑六個印象最深的：
 
 ### 坑 1：Claude JSON 在 2893 字元處截斷
 
