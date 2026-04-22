@@ -65,6 +65,36 @@ npm run dev
 
 ---
 
+## 設定 Email Templates（必要 — 不做會收不到登入信）
+
+Supabase 預設的邀請信與重設密碼信會直接把 token 放在 URL 上（一次性 GET），Gmail / Outlook 等 email 掃描器在信送達時會先預覽連結、把 token 消耗掉，使用者真的點進來時就已經 `otp_expired`。這個 App 改用 `token_hash` flow 繞過這個問題，但你必須手動修改 Supabase 的 email template 才能生效。
+
+到 Supabase 後台 > **Authentication > Email Templates**，編輯這兩個 template：
+
+### Invite user
+
+把原本的 `{{ .ConfirmationURL }}` 連結改成：
+
+```
+{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/set-password
+```
+
+### Reset Password
+
+把原本的 `{{ .ConfirmationURL }}` 連結改成：
+
+```
+{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/set-password
+```
+
+### Site URL
+
+同一頁往下，**Authentication > URL Configuration > Site URL** 必須設成你的 Railway 公開網址（例如 `https://your-app.up.railway.app`），`{{ .SiteURL }}` 才會展開成正確位址。本機開發時可以改成 `http://localhost:3000`。
+
+沒設定的話：使用者點邀請信或忘記密碼信會跳到「連結已失效」。
+
+---
+
 ## 功能說明
 
 - **你（管理員）**：可以新增/編輯食譜、管理食材庫
