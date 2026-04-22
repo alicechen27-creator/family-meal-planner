@@ -99,7 +99,7 @@ export async function POST(req: Request) {
   }
 
   for (const slot of slots ?? []) {
-    const selection = (slot.meal_selections as any[])?.[0]
+    const selection = slot.meal_selections as any
     if (!selection) continue
 
     if (selection.selection_type === 'all_in_one') {

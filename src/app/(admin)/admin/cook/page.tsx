@@ -73,7 +73,7 @@ export default async function CookPage() {
 
       <div className="space-y-6">
         {(slots ?? []).map(slot => {
-          const selection = (slot.meal_selections as any[])?.[0]
+          const selection = slot.meal_selections as any
           const isToday = slot.slot_date === today
 
           return (

@@ -16,8 +16,8 @@ export default async function SelectPage({ params }: { params: Promise<{ slotId:
 
   if (!slot || !slot.is_available) notFound()
 
-  // Slot already taken
-  if (slot.meal_selections?.length > 0) {
+  // Slot already taken (meal_selections is a single object or null due to UNIQUE FK)
+  if (slot.meal_selections) {
     redirect('/?taken=1')
   }
 

@@ -175,6 +175,8 @@ export interface RecipeWithComponents extends Recipe {
   recipe_ingredients: RecipeIngredient[]
 }
 
+// meal_slot_id has a UNIQUE constraint, so PostgREST embeds meal_selections
+// as a single object (or null), not an array.
 export interface MealSlotWithSelection extends MealSlot {
   meal_selections: (MealSelection & {
     profiles: Profile
@@ -183,7 +185,7 @@ export interface MealSlotWithSelection extends MealSlot {
     veggie_component: (RecipeComponent & { recipe_component_ingredients: RecipeComponentIngredient[] }) | null
     sauce_component: (RecipeComponent & { recipe_component_ingredients: RecipeComponentIngredient[] }) | null
     recipe: (Recipe & { recipe_ingredients: RecipeIngredient[] }) | null
-  })[]
+  }) | null
 }
 
 // ============================================================

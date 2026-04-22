@@ -33,7 +33,7 @@ export default function WeekManagementView({ weekPlan, initialSlots, availableCo
   const router = useRouter()
 
   const availableSlots = slots.filter(s => s.is_available)
-  const filledSlots = availableSlots.filter(s => s.meal_selections?.length > 0)
+  const filledSlots = availableSlots.filter(s => !!s.meal_selections)
   const allFilled = availableSlots.length > 0 && filledSlots.length >= availableSlots.length
 
   const refreshSlots = useCallback(async () => {
@@ -95,7 +95,7 @@ export default function WeekManagementView({ weekPlan, initialSlots, availableCo
     }
   }
 
-  function getMealSummary(selection: MealSlotWithSelection['meal_selections'][0]) {
+  function getMealSummary(selection: NonNullable<MealSlotWithSelection['meal_selections']>) {
     if (selection.selection_type === 'all_in_one') {
       return <span className="text-purple-700">🥘 {selection.recipe?.title}</span>
     }
@@ -259,14 +259,14 @@ function AvailableOptions({ components, allInOneRecipes }: {
 
 function SlotList({ slots, getMealSummary, onDeleteSelection, readOnly }: {
   slots: MealSlotWithSelection[]
-  getMealSummary: (s: MealSlotWithSelection['meal_selections'][0]) => React.ReactNode
+  getMealSummary: (s: NonNullable<MealSlotWithSelection['meal_selections']>) => React.ReactNode
   onDeleteSelection: (id: string) => void
   readOnly?: boolean
 }) {
   return (
     <div className="space-y-2">
       {slots.map(slot => {
-        const selection = slot.meal_selections?.[0]
+        const selection = slot.meal_selections
         return (
           <div key={slot.id} className={`bg-white rounded-2xl border p-4 ${!slot.is_available ? 'opacity-40' : ''}`}>
             <div className="flex items-start justify-between">

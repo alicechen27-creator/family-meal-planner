@@ -8,7 +8,7 @@ interface SlotCardProps {
 }
 
 export default function SlotCard({ slot, currentUserId, onSelect }: SlotCardProps) {
-  const selection = slot.meal_selections?.[0] ?? null
+  const selection = slot.meal_selections ?? null
   const isMySelection = selection?.user_id === currentUserId
   const isClaimed = !!selection
   const isAvailable = slot.is_available

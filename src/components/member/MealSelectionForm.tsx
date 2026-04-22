@@ -124,7 +124,10 @@ export default function MealSelectionForm({ slot, components, allInOneRecipes, u
     if (insertError) {
       if (insertError.code === '23505') {
         setError('這天剛被其他人選走了，請選擇其他天')
-        setTimeout(() => router.push('/'), 2000)
+        setTimeout(() => {
+          router.push('/')
+          router.refresh()
+        }, 2000)
       } else {
         setError('送出失敗：' + insertError.message)
       }
@@ -141,6 +144,7 @@ export default function MealSelectionForm({ slot, components, allInOneRecipes, u
     }).catch(() => {})
 
     router.push('/')
+    router.refresh()
   }
 
   // ── Preview confirmation screen ──────────────────────────────

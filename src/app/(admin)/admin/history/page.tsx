@@ -32,7 +32,7 @@ export default async function HistoryPage() {
         <div className="space-y-4">
           {weeks.map(week => {
             const availableSlots = (week.meal_slots ?? []).filter((s: any) => s.is_available)
-            const filledSlots = availableSlots.filter((s: any) => s.meal_selections?.length > 0)
+            const filledSlots = availableSlots.filter((s: any) => !!s.meal_selections)
             const isClosed = week.status === 'closed'
 
             return (
@@ -72,7 +72,7 @@ export default async function HistoryPage() {
                 {filledSlots.length > 0 && (
                   <div className="p-4 space-y-2">
                     {availableSlots.map((slot: any) => {
-                      const sel = slot.meal_selections?.[0]
+                      const sel = slot.meal_selections
                       if (!sel) return null
                       const label = sel.selection_type === 'all_in_one'
                         ? `🥘 ${sel.recipe?.title ?? '—'}`

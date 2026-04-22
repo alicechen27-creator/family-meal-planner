@@ -26,7 +26,7 @@ export default async function AdminDashboard() {
 
   const slots = weekPlan?.meal_slots ?? []
   const availableSlots = slots.filter((s: { is_available: boolean }) => s.is_available)
-  const filledSlots = availableSlots.filter((s: { meal_selections: { id: string }[] }) => s.meal_selections?.length > 0)
+  const filledSlots = availableSlots.filter((s: { meal_selections: { id: string } | null }) => !!s.meal_selections)
 
   return (
     <div>
