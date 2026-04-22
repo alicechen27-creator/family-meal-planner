@@ -72,6 +72,19 @@ export default function WeekOverview({ weekPlan, slots: initialSlots, currentUse
             slot={slot}
             currentUserId={currentUserId}
             onSelect={() => router.push(`/select/${slot.id}`)}
+            onCancel={async () => {
+              const selection = slot.meal_selections
+              if (!selection) return
+              if (!confirm(`確定要取消 ${slot.weekday} 的選擇嗎？`)) return
+              const supabase = createClient()
+              const { error } = await supabase
+                .from('meal_selections')
+                .delete()
+                .eq('id', selection.id)
+              if (error) {
+                alert('取消失敗：' + error.message)
+              }
+            }}
           />
         ))}
       </div>

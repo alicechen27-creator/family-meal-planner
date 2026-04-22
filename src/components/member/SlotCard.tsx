@@ -5,9 +5,10 @@ interface SlotCardProps {
   slot: MealSlotWithSelection
   currentUserId: string
   onSelect: () => void
+  onCancel: () => void
 }
 
-export default function SlotCard({ slot, currentUserId, onSelect }: SlotCardProps) {
+export default function SlotCard({ slot, currentUserId, onSelect, onCancel }: SlotCardProps) {
   const selection = slot.meal_selections ?? null
   const isMySelection = selection?.user_id === currentUserId
   const isClaimed = !!selection
@@ -69,6 +70,15 @@ export default function SlotCard({ slot, currentUserId, onSelect }: SlotCardProp
             className="shrink-0 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors"
           >
             選擇
+          </button>
+        )}
+
+        {isAvailable && isMySelection && (
+          <button
+            onClick={onCancel}
+            className="shrink-0 text-sm text-orange-600 hover:text-orange-700 border border-orange-200 hover:border-orange-300 px-3 py-2 rounded-xl transition-colors"
+          >
+            取消選擇
           </button>
         )}
       </div>
