@@ -59,7 +59,13 @@ export default function AdminNav({ profile }: { profile: Profile | null }) {
             </Link>
           ))}
         </div>
-        <div className="p-3 border-t border-gray-100">
+        <div className="p-3 border-t border-gray-100 space-y-1">
+          <Link
+            href="/set-password"
+            className="block w-full px-3 py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            修改密碼
+          </Link>
           <button
             onClick={handleLogout}
             className="w-full text-left px-3 py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors"
@@ -76,7 +82,10 @@ export default function AdminNav({ profile }: { profile: Profile | null }) {
             <span className="text-xl">🍽️</span>
             <span className="font-semibold text-gray-800">管理後台</span>
           </div>
-          <button onClick={handleLogout} className="text-xs text-gray-400">登出</button>
+          <div className="flex items-center gap-3">
+            <Link href="/set-password" className="text-xs text-gray-400">修改密碼</Link>
+            <button onClick={handleLogout} className="text-xs text-gray-400">登出</button>
+          </div>
         </div>
       </header>
 

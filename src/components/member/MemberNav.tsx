@@ -46,6 +46,12 @@ export default function MemberNav({ profile, isAdmin }: Props) {
               </Link>
             )}
             <span className="text-sm text-gray-500">{profile?.display_name}</span>
+            <Link
+              href="/set-password"
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              修改密碼
+            </Link>
             <button
               onClick={handleLogout}
               className="text-xs text-gray-400 hover:text-gray-600 transition-colors"

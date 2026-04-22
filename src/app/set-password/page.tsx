@@ -76,7 +76,7 @@ export default function SetPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🍽️</div>
-          <h1 className="text-2xl font-bold text-gray-900">設定你的密碼</h1>
+          <h1 className="text-2xl font-bold text-gray-900">設定密碼</h1>
           <p className="text-gray-500 mt-1 text-sm">家庭週晚餐規劃</p>
         </div>
 
@@ -115,7 +115,7 @@ export default function SetPasswordPage() {
               disabled={loading}
               className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-medium py-2.5 rounded-xl transition-colors"
             >
-              {loading ? '設定中...' : '完成設定並登入'}
+              {loading ? '儲存中...' : '儲存密碼'}
             </button>
           </form>
         )}
