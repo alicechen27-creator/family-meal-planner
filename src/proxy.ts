@@ -26,7 +26,8 @@ export async function proxy(request: NextRequest) {
 
   const isLoginPage =
     pathname.startsWith('/login') ||
-    pathname.startsWith('/signup')
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/forgot-password')
   const isPublicPage = isLoginPage || pathname.startsWith('/set-password')
 
   if (!user && !isPublicPage) {

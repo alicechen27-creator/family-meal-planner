@@ -119,6 +119,9 @@ export default function LoginPage() {
           還沒有帳號？{' '}
           <a href="/signup" className="text-orange-500 hover:underline">建立帳號</a>
         </p>
+        <p className="text-center text-sm mt-2">
+          <a href="/forgot-password" className="text-gray-400 hover:text-gray-600">忘記密碼？</a>
+        </p>
       </div>
     </div>
   )
