@@ -1,16 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { requireAdminMealAccess } from '@/lib/authz'
 
 const client = new Anthropic()
 
 export async function POST() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  const auth = await requireAdminMealAccess()
+  if (!auth.ok) return auth.response
+  const { supabase } = auth
 
   // Fetch home inventory, all recipes, and combination ratings
   const [{ data: inventory }, { data: recipes }, { data: combinationRatings }, { data: recipeRatings }] = await Promise.all([

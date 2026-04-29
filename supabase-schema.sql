@@ -10,9 +10,13 @@ create table if not exists profiles (
   id uuid references auth.users on delete cascade primary key,
   display_name text not null,
   role text not null default 'member' check (role in ('admin', 'member')),
+  app_access text[] not null default '{budget,meal_planner,kids_activity}',
   avatar_url text,
   created_at timestamptz default now()
 );
+
+alter table profiles
+  add column if not exists app_access text[] not null default '{budget,meal_planner,kids_activity}';
 
 alter table profiles enable row level security;
 
@@ -20,6 +24,29 @@ create policy "profiles: authenticated can read all"
   on profiles for select using (auth.uid() is not null);
 create policy "profiles: owner can update"
   on profiles for update using (auth.uid() = id);
+
+create or replace function prevent_profile_privilege_escalation()
+returns trigger as $$
+begin
+  if current_setting('app.bypass_profile_guard', true) = 'on' then
+    return new;
+  end if;
+
+  if auth.uid() = old.id and (
+    new.role is distinct from old.role or
+    new.app_access is distinct from old.app_access
+  ) then
+    raise exception 'cannot update privileged profile fields';
+  end if;
+
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists profiles_prevent_privilege_escalation on profiles;
+create trigger profiles_prevent_privilege_escalation
+  before update of role, app_access on profiles
+  for each row execute function prevent_profile_privilege_escalation();
 
 create or replace function handle_new_user()
 returns trigger as $$

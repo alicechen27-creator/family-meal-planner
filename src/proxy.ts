@@ -14,7 +14,10 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              ...(process.env.NEXT_PUBLIC_COOKIE_DOMAIN ? { domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN } : {}),
+            })
           )
         },
       },
@@ -23,14 +26,22 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
   const pathname = request.nextUrl.pathname
+  const isApiRoute = pathname.startsWith('/api/')
 
   const isLoginPage =
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/forgot-password')
-  const isPublicPage = isLoginPage || pathname.startsWith('/set-password')
+  const isPublicPage =
+    isLoginPage ||
+    pathname.startsWith('/set-password') ||
+    pathname.startsWith('/auth/confirm') ||
+    pathname.startsWith('/no-access')
 
   if (!user && !isPublicPage) {
+    if (isApiRoute) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    }
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -43,11 +54,20 @@ export async function proxy(request: NextRequest) {
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, app_access')
       .eq('id', user.id)
       .single()
 
     const isAdmin = profile?.role === 'admin'
+    const appAccess = (profile?.app_access ?? []) as string[]
+    const hasMealAccess = appAccess.includes('meal_planner')
+
+    if (!hasMealAccess && !isPublicPage) {
+      if (isApiRoute) {
+        return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+      }
+      return NextResponse.redirect(new URL('/no-access', request.url))
+    }
 
     // 非 admin 踢出 /admin
     if (!isAdmin && pathname.startsWith('/admin')) {
@@ -59,5 +79,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|auth/).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

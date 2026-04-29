@@ -1,7 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { lookup } from 'node:dns/promises'
+import { isIPv4, isIPv6 } from 'node:net'
 import { NextResponse } from 'next/server'
+import { requireAdminMealAccess } from '@/lib/authz'
 
 const client = new Anthropic()
+const MAX_BODY_BYTES = 5 * 1024 * 1024
+const MAX_TEXT_CHARS = 12000
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const BLOCKED_HOSTNAMES = new Set(['localhost', 'localhost.localdomain'])
 
 const PARSE_PROMPT = `你是一個食譜解析助手。分析食譜後，以 JSON 格式回傳結構化資料。
 
@@ -53,7 +61,70 @@ const PARSE_PROMPT = `你是一個食譜解析助手。分析食譜後，以 JSO
 - instructions 若沒有烹調步驟可留空字串
 - 判斷 split vs all_in_one 要根據烹調方式，而非食材組成`
 
+function isPrivateAddress(address: string) {
+  if (isIPv4(address)) {
+    const parts = address.split('.').map(Number)
+    const [a, b] = parts
+    return (
+      a === 10 ||
+      a === 127 ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a === 0
+    )
+  }
+
+  if (isIPv6(address)) {
+    const normalized = address.toLowerCase()
+    return (
+      normalized === '::' ||
+      normalized === '::1' ||
+      normalized.startsWith('fc') ||
+      normalized.startsWith('fd') ||
+      normalized.startsWith('fe80:')
+    )
+  }
+
+  return true
+}
+
+async function validateFetchableUrl(rawUrl: string) {
+  let parsed: URL
+  try {
+    parsed = new URL(rawUrl)
+  } catch {
+    throw new Error('無效的網址，請確認 URL 格式正確（需包含 https://）')
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error('只支援 http 或 https 網址')
+  }
+
+  const hostname = parsed.hostname.toLowerCase()
+  if (BLOCKED_HOSTNAMES.has(hostname) || hostname.endsWith('.local')) {
+    throw new Error('不支援內部或本機網址')
+  }
+
+  const addresses = await lookup(hostname, { all: true, verbatim: true })
+  if (addresses.length === 0 || addresses.some(({ address }) => isPrivateAddress(address))) {
+    throw new Error('不支援內部或私有網路網址')
+  }
+
+  return parsed.toString()
+}
+
 export async function POST(req: Request) {
+  const auth = await requireAdminMealAccess()
+  if (!auth.ok) {
+    return auth.response
+  }
+
+  const contentLength = Number(req.headers.get('content-length') ?? 0)
+  if (contentLength > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: '輸入內容太大' }, { status: 413 })
+  }
+
   const formData = await req.formData()
   const type = formData.get('type') as string
   const text = formData.get('text') as string | null
@@ -64,31 +135,47 @@ export async function POST(req: Request) {
     let messages: Anthropic.MessageParam[]
 
     if (type === 'text' && text) {
+      if (text.length > MAX_TEXT_CHARS) {
+        return NextResponse.json({ error: '文字內容太長' }, { status: 413 })
+      }
       messages = [{
         role: 'user',
         content: `請解析以下食譜：\n\n${text}`
       }]
     } else if (type === 'url' && url) {
-      let validUrl: string
       try {
-        validUrl = new URL(url).toString()
-      } catch {
-        return NextResponse.json({ error: '無效的網址，請確認 URL 格式正確（需包含 https://）' }, { status: 400 })
-      }
-      const pageRes = await fetch(validUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } })
-      const html = await pageRes.text()
-      const cleanText = html
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .slice(0, 8000)
+        const validUrl = await validateFetchableUrl(url)
+        const pageRes = await fetch(validUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+          redirect: 'manual',
+          signal: AbortSignal.timeout(8000),
+        })
+        if (pageRes.status >= 300 && pageRes.status < 400) {
+          return NextResponse.json({ error: '不支援會重新導向的網址' }, { status: 400 })
+        }
+        if (!pageRes.ok) {
+          return NextResponse.json({ error: '無法讀取此網址' }, { status: 400 })
+        }
 
-      messages = [{
-        role: 'user',
-        content: `請從以下網頁內容解析食譜（來源：${url}）：\n\n${cleanText}`
-      }]
+        const html = (await pageRes.text()).slice(0, 120000)
+        const cleanText = html
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .slice(0, 8000)
+
+        messages = [{
+          role: 'user',
+          content: `請從以下網頁內容解析食譜（來源：${validUrl}）：\n\n${cleanText}`
+        }]
+      } catch (e) {
+        return NextResponse.json({ error: e instanceof Error ? e.message : '無效的網址' }, { status: 400 })
+      }
     } else if (type === 'image' && image) {
+      if (!ALLOWED_IMAGE_TYPES.has(image.type) || image.size > MAX_IMAGE_BYTES) {
+        return NextResponse.json({ error: '圖片格式或大小不支援' }, { status: 400 })
+      }
       const arrayBuffer = await image.arrayBuffer()
       const base64 = Buffer.from(arrayBuffer).toString('base64')
       const mediaType = image.type as 'image/jpeg' | 'image/png' | 'image/webp'

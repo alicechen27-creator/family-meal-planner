@@ -1,14 +1,11 @@
 import webpush from 'web-push'
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { requireAdminMealAccess, safeInternalUrl } from '@/lib/authz'
 
 export async function POST(req: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  const auth = await requireAdminMealAccess()
+  if (!auth.ok) return auth.response
+  const { supabase, user } = auth
 
   const vapidPublic = process.env.VAPID_PUBLIC_KEY
   const vapidPrivate = process.env.VAPID_PRIVATE_KEY
@@ -21,13 +18,16 @@ export async function POST(req: Request) {
   webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate)
 
   const { title, body, url } = await req.json()
+  if (typeof title !== 'string' || typeof body !== 'string' || title.length > 80 || body.length > 240) {
+    return NextResponse.json({ error: 'invalid payload' }, { status: 400 })
+  }
 
   const { data: subs } = await supabase
     .from('push_subscriptions')
     .select('endpoint, p256dh, auth, user_id')
     .neq('user_id', user.id) // Don't notify the admin who just acted
 
-  const payload = JSON.stringify({ title, body, url: url ?? '/', tag: 'week-plan' })
+  const payload = JSON.stringify({ title, body, url: safeInternalUrl(url), tag: 'week-plan' })
   const results = await Promise.allSettled(
     (subs ?? []).map(sub =>
       webpush.sendNotification(

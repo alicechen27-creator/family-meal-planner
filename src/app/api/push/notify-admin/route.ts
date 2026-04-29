@@ -1,21 +1,23 @@
 import webpush from 'web-push'
-import { createClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireMealAccess } from '@/lib/authz'
 
 export async function POST(req: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const auth = await requireMealAccess()
+  if (!auth.ok) return auth.response
 
   const { weekPlanId } = await req.json()
   if (!weekPlanId) return NextResponse.json({ error: 'weekPlanId required' }, { status: 400 })
+
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) return NextResponse.json({ error: 'service role not configured' }, { status: 500 })
 
   // Server-side verification: only proceed if the week is actually full.
   // Uses service role to bypass RLS for admin push_subscriptions lookup.
   const admin = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    serviceKey,
     { auth: { persistSession: false } }
   )
 
