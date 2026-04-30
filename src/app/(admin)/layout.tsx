@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (profile?.role !== 'admin') redirect('/')
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-stone-50">
       <AdminNav profile={profile} />
       <main className="md:ml-56 min-h-screen">
         <div className="max-w-4xl mx-auto px-4 py-6 pb-24 md:pb-6">

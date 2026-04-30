@@ -18,7 +18,7 @@ export default async function MemberLayout({ children }: { children: React.React
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-stone-50 flex flex-col">
       <MemberNav profile={profile} isAdmin={isAdmin} />
       <main className="flex-1 max-w-lg w-full mx-auto px-4 pb-24 pt-4">
         {vapidPublicKey && <PushSubscriber vapidPublicKey={vapidPublicKey} />}

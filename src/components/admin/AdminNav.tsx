@@ -16,6 +16,8 @@ const NAV_ITEMS = [
   { href: '/', label: '成員視角', emoji: '👤', exact: true },
 ]
 
+const HUB_URL = 'https://hub.leanalice.com/dashboard'
+
 export default function AdminNav({ profile }: { profile: Profile | null }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -44,6 +46,13 @@ export default function AdminNav({ profile }: { profile: Profile | null }) {
           <span className="text-xs text-gray-400">{profile?.display_name}</span>
         </div>
         <div className="flex-1 p-3 space-y-1">
+          <a
+            href={HUB_URL}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            <span>🏠</span>
+            家庭總覽
+          </a>
           {NAV_ITEMS.map(item => (
             <Link
               key={item.href}
@@ -76,16 +85,18 @@ export default function AdminNav({ profile }: { profile: Profile | null }) {
       </nav>
 
       {/* Mobile top bar */}
-      <header className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
-        <div className="px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🍽️</span>
-            <span className="font-semibold text-gray-800">管理後台</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/set-password" className="text-xs text-gray-400">修改密碼</Link>
-            <button onClick={handleLogout} className="text-xs text-gray-400">登出</button>
-          </div>
+      <header className="md:hidden sticky top-0 z-40 h-12 bg-white/90 backdrop-blur-sm border-b border-zinc-100 flex items-center px-4 justify-between">
+        <a
+          href={HUB_URL}
+          className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
+        >
+          <span>🏠</span>
+          <span>家庭總覽</span>
+        </a>
+        <span className="text-sm font-semibold text-zinc-700">🍽️ 週晚餐</span>
+        <div className="flex items-center gap-3">
+          <Link href="/set-password" className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors">修改密碼</Link>
+          <button onClick={handleLogout} className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors">登出</button>
         </div>
       </header>
 

@@ -11,6 +11,8 @@ const TAB_ITEMS = [
   { href: '/my-history', label: '我的歷史', emoji: '📋' },
 ]
 
+const HUB_URL = 'https://hub.leanalice.com/dashboard'
+
 interface Props {
   profile: Profile | null
   isAdmin?: boolean
@@ -35,31 +37,37 @@ export default function MemberNav({ profile, isAdmin }: Props) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm print:hidden">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🍽️</span>
-            <span className="font-semibold text-gray-800">家庭晚餐</span>
-          </div>
+      <header className="sticky top-0 z-40 h-12 bg-white/90 backdrop-blur-sm border-b border-zinc-100 print:hidden">
+        <div className="max-w-lg mx-auto px-4 h-full flex items-center justify-between">
+          <a
+            href={HUB_URL}
+            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
+          >
+            <span>🏠</span>
+            <span>家庭總覽</span>
+          </a>
+          <span className="text-sm font-semibold text-zinc-700">🍽️ 週晚餐</span>
           <div className="flex items-center gap-3">
             {isAdmin && (
               <Link href="/admin" className="text-xs text-orange-500 hover:text-orange-700 font-medium transition-colors">
-                管理後台
+                管理
               </Link>
             )}
-            <span className="text-sm text-gray-500">{profile?.display_name}</span>
             <Link
               href="/set-password"
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
             >
               修改密碼
             </Link>
             <button
               onClick={handleLogout}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
             >
               登出
             </button>
+            {profile?.display_name && (
+              <span className="sr-only">{profile.display_name}</span>
+            )}
           </div>
         </div>
       </header>
