@@ -11,7 +11,8 @@ const TAB_ITEMS = [
   { href: '/my-history', label: '我的歷史', emoji: '📋' },
 ]
 
-const HUB_URL = 'https://hub.leanalice.com/dashboard'
+// 選填：設定後顯示「家庭總覽」連結（例如自架的家庭儀表板）
+const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL
 
 interface Props {
   profile: Profile | null
@@ -39,13 +40,17 @@ export default function MemberNav({ profile, isAdmin }: Props) {
     <>
       <header className="sticky top-0 z-40 h-12 bg-white/90 backdrop-blur-sm border-b border-zinc-100 print:hidden">
         <div className="max-w-lg mx-auto px-4 h-full flex items-center justify-between">
-          <a
-            href={HUB_URL}
-            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
-          >
-            <span>🏠</span>
-            <span>家庭總覽</span>
-          </a>
+          {HUB_URL ? (
+            <a
+              href={HUB_URL}
+              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
+            >
+              <span>🏠</span>
+              <span>家庭總覽</span>
+            </a>
+          ) : (
+            <span />
+          )}
           <span className="text-sm font-semibold text-zinc-700">🍽️ 週晚餐</span>
           <div className="flex items-center gap-3">
             {isAdmin && (

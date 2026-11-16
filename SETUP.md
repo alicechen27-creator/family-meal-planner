@@ -26,6 +26,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
 ANTHROPIC_API_KEY=sk-ant-...
+
+# 選填：導覽列「家庭總覽」連結（例如自架的家庭儀表板），不設就不顯示
+NEXT_PUBLIC_HUB_URL=
 ```
 
 ---
